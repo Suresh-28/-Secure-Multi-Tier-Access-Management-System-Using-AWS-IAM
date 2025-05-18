@@ -1,0 +1,158 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Aws Iam Setup with Users,Groups,Policies and Role for Ec2.
+Resources:
+
+#Groups
+  Devgrp :
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: Developers
+      ManagedPolicyArns: 
+      - !Ref DEVPolicy     
+  DevOpgrp :
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: DevOps
+      ManagedPolicyArns: 
+      - !Ref DEVOPSPolicy  
+
+  Securitygrp :
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: Security
+      ManagedPolicyArns: 
+      - !Ref SecurityPolicy  
+
+  Managergrp :
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: Manager
+      ManagedPolicyArns: 
+      - !Ref ManagerPolicy 
+
+#Policies
+
+  DEVPolicy :
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: DeveloperPolicy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:*
+              - codecommit:*
+            Resource: "*"
+  DEVOPSPolicy :
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: DevOpsPolicy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - ec2:*
+              - cloudwatch:*
+            Resource: "*"
+  SecurityPolicy :
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: SecurityPolicy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - iam:Get*
+              - cloudtrail:LookupEvents
+            Resource: "*"            
+  ManagerPolicy :
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: ManagerPolicy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - ce:*
+              - aws-portal:*
+            Resource: "*"                       
+
+#Users
+
+  Devuser1 :
+    Type: AWS::IAM::User
+    Properties:
+      Groups: [ !Ref Devgrp ]
+      UserName: Dev_user1
+  Devuser2 :
+    Type: AWS::IAM::User
+    Properties:
+      Groups: [ !Ref Devgrp ]
+      UserName: Dev_user2
+  Devopsuser1 :
+    Type: AWS::IAM::User
+    Properties:
+      Groups: [ !Ref DevOpgrp ]
+      UserName: Dev_ops1
+  Devopsuser2 :
+    Type: AWS::IAM::User
+    Properties:
+      Groups: [ !Ref DevOpgrp ]
+      UserName: Dev_ops2
+  Securityuser1 :
+    Type: AWS::IAM::User
+    Properties:
+      Groups: [ !Ref Securitygrp ]
+      UserName: Security_user1            
+  Securityuser2 :
+    Type: AWS::IAM::User
+    Properties:
+      Groups: [ !Ref Securitygrp ]
+      UserName: Security_user2         
+  Manageruser1 :
+    Type: AWS::IAM::User
+    Properties:
+      Groups: [ !Ref Managergrp ]
+      UserName: Manager_user1 
+  Manageruser2 :
+    Type: AWS::IAM::User
+    Properties:
+      Groups: [ !Ref Managergrp ]
+      UserName: Manager_user2                
+
+#Role
+
+  Ec2S3Role :
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+
+      Policies: 
+        - PolicyName: S3AccessFromeEc2
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:GetObject
+          Resource: "*" 
+
+Outputs:
+  EC2S3RoleARN:
+    Description: ARN of EC2 S3 access role
+    Value: !GetAtt Ec2S3Role.Arn
